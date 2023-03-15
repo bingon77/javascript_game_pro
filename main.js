@@ -52,7 +52,7 @@ function update(){
     }
 
     if(shipX >= canvas.width-64){
-        shipX = canvas.width-64; 
+        shipX = canvas.width-64;
     }
 }
 
