@@ -25,6 +25,11 @@ let shipY = canvas.height-74;
 
 let bulletMoveY = 7;
 let shipMoveX = 5;
+
+let enemyY = 3;
+
+let gameScore = 0;
+let gameOver = false; // true 게임 끝!!!
 function loadImg(){
     backGroundImg = new Image();
     backGroundImg.src = 'img/background_space.jpg';
@@ -38,6 +43,9 @@ function loadImg(){
 
     bulletImg = new Image();
     bulletImg.src = "img/bullet.png"
+
+    enemyImg = new Image();
+    enemyImg.src = "img/enemy.png"
 
 }
 
@@ -68,12 +76,28 @@ function bulletClass(){
     this.init = function(){
         this.x = shipX+21;
         this.y = shipY;
+        this.alive = true; //true 살아있는 총알 , false 죽은 총알;
         bulletList.push(this);
     }
 
     this.update = function(){
         this.y -= bulletMoveY;
     }
+
+
+
+    this.checkHit = function(){
+        for (let i = 0; i < enemyList.length; i++) {
+            if(this.y <= enemyList[i].y && this.x >= enemyList[i].x && this.x <= enemyList[i].x+48){
+                gameScore++;
+                this.alive = false;
+                enemyList.splice(i,1);
+            }
+        }
+    }
+
+
+
 }
 
 function createBullet(){
@@ -106,27 +130,49 @@ function update(){
 
     //총알의 y좌표 업데이트 하는 함수
     for (let i = 0; i < bulletList.length; i++) {
-        bulletList[i].update();
+
+        if(bulletList[i].alive){
+            bulletList[i].update();
+            bulletList[i].checkHit();
+        }
+    }
+
+    //적군의 y좌표 없데이트 한다.
+    for (let i = 0; i < enemyList.length; i++) {
+        enemyList[i].update();
     }
 }
 
 function render(){
     ctx.drawImage(backGroundImg,0,0,canvas.width,canvas.height);
     ctx.drawImage(shipImg,shipX,shipY,64,64);
+    ctx.fillText(`score : ${gameScore}`,20,20);
+    ctx.fillStyle = "white";
+    ctx.font = "24px Arial";
 
     for (let i = 0; i < bulletList.length; i++) {
-        ctx.drawImage(bulletImg,bulletList[i].x,bulletList[i].y,20,30);
+        if(bulletList[i].alive){
+            ctx.drawImage(bulletImg,bulletList[i].x,bulletList[i].y,20,30);
+        }
+
+    }
+
+
+    for (let i = 0; i < enemyList.length; i++) {
+        ctx.drawImage(enemyImg,enemyList[i].x,enemyList[i].y,48,48);
     }
 }
 
 function main(){
-    update();
-    render();
-    requestAnimationFrame(main);
+    if(!gameOver){
+        update();
+        render();
+        requestAnimationFrame(main);
+    }else{
+        ctx.drawImage(gameOverImg,40,100,380,380);
+    }
+
 }
-loadImg();
-setKeyboardListener();
-main();
 
 
 //방향키를 누르면
@@ -141,3 +187,57 @@ main();
 4. 총알들은 x,y 좌표값이 있어야 한다.
 5. 총알 배열을 가지고 render 그려준다
  */
+
+
+
+
+//적군 만들기
+/*
+1. 적군은 x,y좌표를 가진다 좌표 init
+2.
+ */
+
+
+let enemyList = [];
+function generateRandomValue(min,max){
+    let randomNum = Math.random()*(max-min+1)+min;
+    return randomNum;
+}
+function enemyClass(){
+    this.x = 0;
+    this.y = 0;
+
+    this.init = function(){
+        this.y = 0;
+        this.x = generateRandomValue(0,canvas.width-48);
+        enemyList.push(this);
+    }
+    this.update = function(){
+        this.y += enemyY;
+
+        if(this.y >= canvas.height-48){
+            gameOver = true;
+        }
+    }
+}
+
+
+function createEnemy(){
+    const interval = setInterval(function(){
+        let e = new enemyClass();
+        e.init();
+    },1000);
+}
+
+
+//적군 소멸 및 총알 소멸
+/*
+총알.
+ */
+
+
+
+loadImg();
+setKeyboardListener();
+main();
+createEnemy();
