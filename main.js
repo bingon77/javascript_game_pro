@@ -92,6 +92,7 @@ function bulletClass(){
                 gameScore++;
                 this.alive = false;
                 enemyList.splice(i,1);
+                enemyMovingChange();
             }
         }
     }
@@ -144,16 +145,33 @@ function update(){
 }
 
 function render(){
+    //켄버스에 배경 이미지 생성하기
     ctx.drawImage(backGroundImg,0,0,canvas.width,canvas.height);
+
+    //켄버스에 나의 우주선 이미지 생성하기
     ctx.drawImage(shipImg,shipX,shipY,64,64);
+
+    //스코어 점수 출력하기
     ctx.fillText(`score : ${gameScore}`,20,20);
     ctx.fillStyle = "white";
     ctx.font = "24px Arial";
 
+
+    //캔버스에 총알 생성하는데 스페이스 누르면 여러개의 총알로 배열에 담김
     for (let i = 0; i < bulletList.length; i++) {
+        //총알의 상태로 그려 주기
         if(bulletList[i].alive){
+            //켄버스에 스페이스바를 누른 총알을 렌더링 해준다.
             ctx.drawImage(bulletImg,bulletList[i].x,bulletList[i].y,20,30);
         }
+
+        //사용 만료된 총알을 삭제하는 로직
+        if(bulletList[i].y <0 ||bulletList[i].alive == false){
+            //console.log(bulletList[i],i);
+            bulletList.splice(i,1);
+
+        }
+
 
     }
 
@@ -198,7 +216,10 @@ function main(){
  */
 
 
+//적군 리스트
 let enemyList = [];
+
+//적군 생성시 x좌표의 값을 랜든으로 생성
 function generateRandomValue(min,max){
     let randomNum = Math.random()*(max-min+1)+min;
     return randomNum;
@@ -212,9 +233,12 @@ function enemyClass(){
         this.x = generateRandomValue(0,canvas.width-48);
         enemyList.push(this);
     }
+
+    //적군이 내려오도록 업데이트 하는 로직
     this.update = function(){
         this.y += enemyY;
 
+        //적군이 바닥에 닫으면 게임종료
         if(this.y >= canvas.height-48){
             gameOver = true;
         }
@@ -222,22 +246,35 @@ function enemyClass(){
 }
 
 
+
+let enemyTime = 1000;
+
 function createEnemy(){
-    const interval = setInterval(function(){
-        let e = new enemyClass();
-        e.init();
-    },1000);
+    let e = new enemyClass();
+    e.init();
 }
 
 
-//적군 소멸 및 총알 소멸
-/*
-총알.
- */
+let enemyInterval;
+//인터벌 시간 병경을 위하여 외부생성
+function createEnemyInterval(){
+    enemyInterval = setInterval(createEnemy,enemyTime);
+}
 
+
+//스코어 점수 변경시 적군 생성 시간 변경하는 로직
+function enemyMovingChange(){
+    if(gameScore >1 && gameScore%50 ===0){
+        clearInterval(enemyInterval);
+        if(enemyTime > 500){
+            enemyTime += (-100);
+        }
+        createEnemyInterval();
+    }
+}
 
 
 loadImg();
 setKeyboardListener();
 main();
-createEnemy();
+createEnemyInterval();
